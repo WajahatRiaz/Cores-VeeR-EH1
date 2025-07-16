@@ -22,7 +22,7 @@ $(error env var RV_ROOT does not point to a valid dir! Exiting!)
 endif
 
 TEST_CFLAGS = -g -O3 -funroll-all-loops
-ABI = -mabi=ilp32 -march=rv32imc_zicsr
+ABI = -mabi=ilp32 -march=rv32imc_zicsr_zifencei
 
 # Allow snapshot override
 target = default
