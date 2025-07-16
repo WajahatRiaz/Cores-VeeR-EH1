@@ -13,12 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`ifdef VERILATOR
+
 module tb_top ( input bit core_clk);
-`else
-module tb_top;
-    bit                         core_clk;
-`endif
     logic                       rst_l;
     logic                       porst_l;
     logic                       nmi_int;
@@ -26,42 +22,6 @@ module tb_top;
     logic        [31:0]         reset_vector;
     logic        [31:0]         nmi_vector;
     logic        [31:1]         jtag_id;
-
-    logic        [31:0]         ic_haddr;
-    logic        [2:0]          ic_hburst;
-    logic                       ic_hmastlock;
-    logic        [3:0]          ic_hprot;
-    logic        [2:0]          ic_hsize;
-    logic        [1:0]          ic_htrans;
-    logic                       ic_hwrite;
-    logic        [63:0]         ic_hrdata;
-    logic                       ic_hready;
-    logic                       ic_hresp;
-
-    logic        [31:0]         lsu_haddr;
-    logic        [2:0]          lsu_hburst;
-    logic                       lsu_hmastlock;
-    logic        [3:0]          lsu_hprot;
-    logic        [2:0]          lsu_hsize;
-    logic        [1:0]          lsu_htrans;
-    logic                       lsu_hwrite;
-    logic        [63:0]         lsu_hrdata;
-    logic        [63:0]         lsu_hwdata;
-    logic                       lsu_hready;
-    logic                       lsu_hresp;
-
-    logic        [31:0]         sb_haddr;
-    logic        [2:0]          sb_hburst;
-    logic                       sb_hmastlock;
-    logic        [3:0]          sb_hprot;
-    logic        [2:0]          sb_hsize;
-    logic        [1:0]          sb_htrans;
-    logic                       sb_hwrite;
-
-    logic        [63:0]         sb_hrdata;
-    logic        [63:0]         sb_hwdata;
-    logic                       sb_hready;
-    logic                       sb_hresp;
 
     logic        [63:0]         trace_rv_i_insn_ip;
     logic        [63:0]         trace_rv_i_address_ip;
@@ -106,7 +66,6 @@ module tb_top;
     logic [4:0]                 wb_dest[1:0];
     logic [31:0]                wb_data[1:0];
 
-`ifdef RV_BUILD_AXI4
    //-------------------------- LSU AXI signals--------------------------
    // AXI Write Channels
     wire                        lsu_axi_awvalid;
@@ -309,8 +268,6 @@ module tb_top;
     wire [`RV_LSU_BUS_TAG-1:0]  lmem_axi_bid;
     wire                        lmem_axi_bready;
 
-
-`endif
     wire[63:0]                  WriteData;
     string                      abi_reg[32]; // ABI register names
 
@@ -433,89 +390,44 @@ module tb_top;
 `ifndef VERILATOR
         if($test$plusargs("dumpon")) $dumpvars;
         forever  core_clk = #5 ~core_clk;
-`endif
+        `endif
     end
-
-
+    
+    
     assign rst_l = cycleCnt > 5;
     assign porst_l = cycleCnt >2;
+    
+    //=========================================================================-
+    // RTL instance
+    //=========================================================================-
+    veer_wrapper rvtop (
 
-   //=========================================================================-
-   // RTL instance
-   //=========================================================================-
-veer_wrapper rvtop (
+    //-------------------------- Clock and Clock Enables--------------------------            
+    .clk                    ( core_clk      ),
+    .lsu_bus_clk_en         ( 1'b1  ),
+    .ifu_bus_clk_en         ( 1'b1  ),
+    .dbg_bus_clk_en         ( 1'b1  ),
+    .dma_bus_clk_en         ( 1'b1  ),
+        
+        //-------------------------- Reset Signals--------------------------    
     .rst_l                  ( rst_l         ),
     .dbg_rst_l              ( porst_l       ),
-    .clk                    ( core_clk      ),
     .rst_vec                ( reset_vector[31:1]),
+
+    //-------------------------- Interrupts--------------------------
     .nmi_int                ( nmi_int       ),
     .nmi_vec                ( nmi_vector[31:1]),
+    .timer_int              ( 1'b0     ),
+    .extintsrc_req          ( '0  ),
+        
+    //-------------------------- JTAG port--------------------------
     .jtag_id                ( jtag_id[31:1]),
+    .jtag_tck               ( 1'b0  ),
+    .jtag_tms               ( 1'b0  ),
+    .jtag_tdi               ( 1'b0  ),
+    .jtag_trst_n            ( 1'b0  ),
+    .jtag_tdo               ( jtag_tdo ),
 
-`ifdef RV_BUILD_AHB_LITE
-    .haddr                  ( ic_haddr      ),
-    .hburst                 ( ic_hburst     ),
-    .hmastlock              ( ic_hmastlock  ),
-    .hprot                  ( ic_hprot      ),
-    .hsize                  ( ic_hsize      ),
-    .htrans                 ( ic_htrans     ),
-    .hwrite                 ( ic_hwrite     ),
-
-    .hrdata                 ( ic_hrdata[63:0]),
-    .hready                 ( ic_hready     ),
-    .hresp                  ( ic_hresp      ),
-
-    //---------------------------------------------------------------
-    // Debug AHB Master
-    //---------------------------------------------------------------
-    .sb_haddr               ( sb_haddr      ),
-    .sb_hburst              ( sb_hburst     ),
-    .sb_hmastlock           ( sb_hmastlock  ),
-    .sb_hprot               ( sb_hprot      ),
-    .sb_hsize               ( sb_hsize      ),
-    .sb_htrans              ( sb_htrans     ),
-    .sb_hwrite              ( sb_hwrite     ),
-    .sb_hwdata              ( sb_hwdata     ),
-
-    .sb_hrdata              ( sb_hrdata     ),
-    .sb_hready              ( sb_hready     ),
-    .sb_hresp               ( sb_hresp      ),
-
-    //---------------------------------------------------------------
-    // LSU AHB Master
-    //---------------------------------------------------------------
-    .lsu_haddr              ( lsu_haddr       ),
-    .lsu_hburst             ( lsu_hburst      ),
-    .lsu_hmastlock          ( lsu_hmastlock   ),
-    .lsu_hprot              ( lsu_hprot       ),
-    .lsu_hsize              ( lsu_hsize       ),
-    .lsu_htrans             ( lsu_htrans      ),
-    .lsu_hwrite             ( lsu_hwrite      ),
-    .lsu_hwdata             ( lsu_hwdata      ),
-
-    .lsu_hrdata             ( lsu_hrdata[63:0]),
-    .lsu_hready             ( lsu_hready      ),
-    .lsu_hresp              ( lsu_hresp       ),
-
-    //---------------------------------------------------------------
-    // DMA Slave
-    //---------------------------------------------------------------
-    .dma_haddr              ( '0 ),
-    .dma_hburst             ( '0 ),
-    .dma_hmastlock          ( '0 ),
-    .dma_hprot              ( '0 ),
-    .dma_hsize              ( '0 ),
-    .dma_htrans             ( '0 ),
-    .dma_hwrite             ( '0 ),
-    .dma_hwdata             ( '0 ),
-
-    .dma_hrdata             ( dma_hrdata    ),
-    .dma_hresp              ( dma_hresp     ),
-    .dma_hsel               ( 1'b1            ),
-    .dma_hreadyin           ( dma_hready_out  ),
-    .dma_hreadyout          ( dma_hready_out  ),
-`endif
-`ifdef RV_BUILD_AXI4
     //-------------------------- LSU AXI signals--------------------------
     // AXI Write Channels
     .lsu_axi_awvalid        (lsu_axi_awvalid),
@@ -695,15 +607,9 @@ veer_wrapper rvtop (
     .dma_axi_rdata          (dma_axi_rdata),
     .dma_axi_rresp          (dma_axi_rresp),
     .dma_axi_rlast          (dma_axi_rlast),
-`endif
-    .timer_int              ( 1'b0     ),
-    .extintsrc_req          ( '0  ),
 
-    .lsu_bus_clk_en         ( 1'b1  ),
-    .ifu_bus_clk_en         ( 1'b1  ),
-    .dbg_bus_clk_en         ( 1'b1  ),
-    .dma_bus_clk_en         ( 1'b1  ),
 
+   //-------------------------- Trace port--------------------------
     .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
     .trace_rv_i_address_ip  (trace_rv_i_address_ip),
     .trace_rv_i_valid_ip    (trace_rv_i_valid_ip),
@@ -712,85 +618,34 @@ veer_wrapper rvtop (
     .trace_rv_i_interrupt_ip(trace_rv_i_interrupt_ip),
     .trace_rv_i_tval_ip     (trace_rv_i_tval_ip),
 
-    .jtag_tck               ( 1'b0  ),
-    .jtag_tms               ( 1'b0  ),
-    .jtag_tdi               ( 1'b0  ),
-    .jtag_trst_n            ( 1'b0  ),
-    .jtag_tdo               ( jtag_tdo ),
-
+    //-------------------------- MPC Debug Interface--------------------------
     .mpc_debug_halt_ack     ( mpc_debug_halt_ack),
     .mpc_debug_halt_req     ( 1'b0),
     .mpc_debug_run_ack      ( mpc_debug_run_ack),
     .mpc_debug_run_req      ( 1'b1),
     .mpc_reset_run_req      ( 1'b1),
-     .debug_brkpt_status    (debug_brkpt_status),
+    .o_debug_mode_status    (o_debug_mode_status),
+    .debug_brkpt_status    (debug_brkpt_status),
 
+    //-------------------------- PMU Interface--------------------------
     .i_cpu_halt_req         ( 1'b0  ),
     .o_cpu_halt_ack         ( o_cpu_halt_ack ),
     .o_cpu_halt_status      ( o_cpu_halt_status ),
     .i_cpu_run_req          ( 1'b0  ),
-    .o_debug_mode_status    (o_debug_mode_status),
     .o_cpu_run_ack          ( o_cpu_run_ack ),
-
+     
+    //-------------------------- Performance Couner Activity--------------------------
     .dec_tlu_perfcnt0       (dec_tlu_perfcnt0),
     .dec_tlu_perfcnt1       (dec_tlu_perfcnt1),
     .dec_tlu_perfcnt2       (dec_tlu_perfcnt2),
     .dec_tlu_perfcnt3       (dec_tlu_perfcnt3),
 
+    //-------------------------- Testing--------------------------
     .scan_mode              ( 1'b0 ),
     .mbist_mode             ( 1'b0 )
 
 );
 
-
-   //=========================================================================-
-   // AHB I$ instance
-   //=========================================================================-
-`ifdef RV_BUILD_AHB_LITE
-
-ahb_sif imem (
-     // Inputs
-     .HWDATA(64'h0),
-     .HCLK(core_clk),
-     .HSEL(1'b1),
-     .HPROT(ic_hprot),
-     .HWRITE(ic_hwrite),
-     .HTRANS(ic_htrans),
-     .HSIZE(ic_hsize),
-     .HREADY(ic_hready),
-     .HRESETn(rst_l),
-     .HADDR(ic_haddr),
-     .HBURST(ic_hburst),
-
-     // Outputs
-     .HREADYOUT(ic_hready),
-     .HRESP(ic_hresp),
-     .HRDATA(ic_hrdata[63:0])
-);
-
-
-ahb_sif lmem (
-     // Inputs
-     .HWDATA(lsu_hwdata),
-     .HCLK(core_clk),
-     .HSEL(1'b1),
-     .HPROT(lsu_hprot),
-     .HWRITE(lsu_hwrite),
-     .HTRANS(lsu_htrans),
-     .HSIZE(lsu_hsize),
-     .HREADY(lsu_hready),
-     .HRESETn(rst_l),
-     .HADDR(lsu_haddr),
-     .HBURST(lsu_hburst),
-
-     // Outputs
-     .HREADYOUT(lsu_hready),
-     .HRESP(lsu_hresp),
-     .HRDATA(lsu_hrdata[63:0])
-);
-
-`endif
-`ifdef RV_BUILD_AXI4
 axi_slv #(.TAGW(`RV_IFU_BUS_TAG)) imem(
     .aclk(core_clk),
     .rst_l(rst_l),
@@ -939,7 +794,6 @@ axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
 
 );
 
-`endif
 
 task preload_iccm;
 bit[31:0] data;
@@ -1013,55 +867,33 @@ endtask
 
 
 task slam_iccm_ram(input [31:0] addr, input[38:0] data);
-int bank, indx;
-`ifdef RV_ICCM_ENABLE
-bank = get_iccm_bank(addr, indx);
-case(bank)
-0: `IRAM0(0)[indx] = data;
-1: `IRAM1(0)[indx] = data;
-2: `IRAM2(0)[indx] = data;
-3: `IRAM3(0)[indx] = data;
-`ifdef RV_ICCM_NUM_BANKS_8
-4: `IRAM0(1)[indx] = data;
-5: `IRAM1(1)[indx] = data;
-6: `IRAM2(1)[indx] = data;
-7: `IRAM3(1)[indx] = data;
-`endif
-`ifdef RV_ICCM_NUM_BANKS_16
-8: `IRAM0(2)[indx] = data;
-9: `IRAM1(2)[indx] = data;
-10: `IRAM2(2)[indx] = data;
-11: `IRAM3(2)[indx] = data;
-12: `IRAM0(3)[indx] = data;
-13: `IRAM1(3)[indx] = data;
-14: `IRAM2(3)[indx] = data;
-15: `IRAM3(3)[indx] = data;
-`endif
-endcase
-`endif
+    int bank, indx;
+    bank = get_iccm_bank(addr, indx);
+    case(bank)
+    0: `IRAM0(0)[indx] = data;
+    1: `IRAM1(0)[indx] = data;
+    2: `IRAM2(0)[indx] = data;
+    3: `IRAM3(0)[indx] = data;
+    4: `IRAM0(1)[indx] = data;
+    5: `IRAM1(1)[indx] = data;
+    6: `IRAM2(1)[indx] = data;
+    7: `IRAM3(1)[indx] = data;
+    endcase
 endtask
 
 task slam_dccm_ram(input [31:0] addr, input[38:0] data);
-int bank, indx;
-`ifdef RV_DCCM_ENABLE
-bank = get_dccm_bank(addr, indx);
-case(bank)
-0: `DRAM(0)[indx] = data;
-1: `DRAM(1)[indx] = data;
-`ifdef RV_DCCM_NUM_BANKS_4
-2: `DRAM(2)[indx] = data;
-3: `DRAM(3)[indx] = data;
-`endif
-`ifdef RV_DCCM_NUM_BANKS_8
-2: `DRAM(2)[indx] = data;
-3: `DRAM(3)[indx] = data;
-4: `DRAM(4)[indx] = data;
-5: `DRAM(5)[indx] = data;
-6: `DRAM(6)[indx] = data;
-7: `DRAM(7)[indx] = data;
-`endif
-endcase
-`endif
+    int bank, indx;
+    bank = get_dccm_bank(addr, indx);
+    case(bank)
+    0: `DRAM(0)[indx] = data;
+    1: `DRAM(1)[indx] = data;
+    2: `DRAM(2)[indx] = data;
+    3: `DRAM(3)[indx] = data;
+    4: `DRAM(4)[indx] = data;
+    5: `DRAM(5)[indx] = data;
+    6: `DRAM(6)[indx] = data;
+    7: `DRAM(7)[indx] = data;
+    endcase
 endtask
 
 function[6:0] riscv_ecc32(input[31:0] data);
@@ -1077,29 +909,14 @@ return synd;
 endfunction
 
 function int get_dccm_bank(input int addr,  output int bank_idx);
-`ifdef RV_DCCM_NUM_BANKS_2
-    bank_idx = int'(addr[`RV_DCCM_BITS-1:3]);
-    return int'( addr[2]);
-`elsif RV_DCCM_NUM_BANKS_4
-    bank_idx = int'(addr[`RV_DCCM_BITS-1:4]);
-    return int'(addr[3:2]);
-`elsif RV_DCCM_NUM_BANKS_8
+
     bank_idx = int'(addr[`RV_DCCM_BITS-1:5]);
     return int'( addr[4:2]);
-`endif
 endfunction
 
 function int get_iccm_bank(input int addr,  output int bank_idx);
-`ifdef RV_ICCM_NUM_BANKS_4
-    bank_idx = int'(addr[`RV_ICCM_BITS-1:4]);
-    return int'( addr[3:2]);
-`elsif RV_ICCM_NUM_BANKS_8
     bank_idx = int'(addr[`RV_ICCM_BITS-1:5]);
     return int'(addr[4:2]);
-`else
-    bank_idx = int'(addr[`RV_ICCM_BITS-1:6]);
-    return int'( addr[5:2]);
-`endif
 endfunction
 
 /* verilator lint_off WIDTH */
@@ -1110,6 +927,5 @@ endfunction
 
 
 endmodule
-`ifdef RV_BUILD_AXI4
+
 `include "axi_lsu_dma_bridge.sv"
-`endif

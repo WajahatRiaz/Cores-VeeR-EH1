@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 CONF_PARAMS = -set iccm_enable
+export RV_ROOT := $(shell pwd)
+
 # Check for RV_ROOT
 ifeq (,$(wildcard ${RV_ROOT}/configs/veer.config))
 $(error env var RV_ROOT does not point to a valid dir! Exiting!)
