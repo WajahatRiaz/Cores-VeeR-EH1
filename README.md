@@ -23,8 +23,10 @@ Files under the [tools](tools/) directory may be available under a different lic
     ├── docs
     ├── tools                   # Scripts/Makefiles
     └── testbench               # (Very) simple testbench
-        ├── asm                 # Example test files
+        ├── ctests                 # Example test files
         └── hex                 # Canned demo hex files
+        └── asm                 # Canned demo asm files
+          
  
 ## Dependencies
 
@@ -149,7 +151,7 @@ where:
 * `debug=1` - allows VCD generation for verilator, VCS and Riviera-PRO and SHM waves for irun option.
 * `<target>` - predefined CPU configurations `default` (by default), `default_ahb`, `default_pd`, `high_perf`
 * `TEST` - allows to run a C (<test>.c) or assembly (<test>.s) test, hello_world is run by default 
-* `TEST_DIR` - alternative to test source directory `testbench/asm`
+* `TEST_DIR` - alternative to test source directory `testbench/ctests`
 * `<snapshot>` - run and build executable model of custom CPU configuration, remember to provide `snapshot` argument for runs on custom configurations.
 * `CONF_PARAMS` - configuration parameter for veer.config, ex: `CONF_PARAMS=-unset=dccm_enable` to build with no DCCM
 
@@ -159,7 +161,7 @@ Example:
 make -f $RV_ROOT/tools/Makefile verilator TEST=cmark
 ```
 
-will simulate the `testbench/asm/cmark.c` program with Verilator on the default target.
+will simulate the `testbench/ctests/cmark.c` program with Verilator on the default target.
 
 If you want to compile a test only, you can run:
 
@@ -179,7 +181,7 @@ optionally to DCCM/ICCM at the beginning of simulation)*.
 
 Note: You may need to delete `program.hex` file from work directory, when running a new test.
 
-The  `$RV_ROOT/testbench/asm` directory contains thefollowing tests ready to simulate:
+The  `$RV_ROOT/testbench/ctests` directory contains thefollowing tests ready to simulate:
 
 * `hello_world` - default test to run, prints Hello World message to screen and `console.log`
 * `hello_world_dccm` - same as above, but takes the string from preloaded DCCM.

@@ -41,8 +41,8 @@ TEST = hello_world
 # Define default test directory
 TEST_DIR = $(TBDIR)/ctests
 HEX_DIR = $(TBDIR)/hex
-ifneq (,$(wildcard $(TBDIR)/tests/$(TEST)))
-        TEST_DIR = $(TBDIR)/tests/$(TEST)
+ifneq (,$(wildcard $(TBDIR)/asm/$(TEST)))
+        TEST_DIR = $(TBDIR)/asm/$(TEST)
 endif
 
 ifdef debug
