@@ -53,4 +53,5 @@ tools/codegenerators/AAPGV2/swerv/objdump/out*
 obj_dir
 *.hex
 *.csv
-verilator-build 
+verilator-build
+sim.vcd

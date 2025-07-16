@@ -796,64 +796,71 @@ axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
 
 
 task preload_iccm;
-bit[31:0] data;
-bit[31:0] addr, eaddr, saddr;
-
-/*
-addresses:
- 0xfffffff0 - ICCM start address to load
- 0xfffffff4 - ICCM end address to load
-*/
-
-addr = 'hffff_fff0;
-saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
-if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
-`ifndef RV_ICCM_ENABLE
-    $display("********************************************************");
-    $display("ICCM preload: there is no ICCM in VeeR, terminating !!!");
-    $display("********************************************************");
-    $finish;
-`endif
-addr += 4;
-eaddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
-$display("ICCM pre-load from %h to %h", saddr, eaddr);
-
-for(addr= saddr; addr <= eaddr; addr+=4) begin
-    data = {imem.mem[addr+3],imem.mem[addr+2],imem.mem[addr+1],imem.mem[addr]};
-    slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
-end
-
+    bit[31:0] data;
+    bit[31:0] addr, eaddr, saddr;
+    
+    /*
+    addresses:
+     0xfffffff0 - ICCM start address to load
+     0xfffffff4 - ICCM end address to load
+    */
+    
+    addr = 'hffff_fff0;
+    saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
+    if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) begin
+        $display("Task preload_iccm -> Loading from external memory instead");
+        return;
+    end
+    `ifndef RV_ICCM_ENABLE
+        $display("********************************************************");
+        $display("ICCM preload: there is no ICCM in VeeR, terminating !!!");
+        $display("********************************************************");
+        $finish;
+    `endif
+    addr += 4;
+    eaddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
+    $display("ICCM pre-load from %h to %h", saddr, eaddr);
+    
+    for(addr= saddr; addr <= eaddr; addr+=4) begin
+        data = {imem.mem[addr+3],imem.mem[addr+2],imem.mem[addr+1],imem.mem[addr]};
+        slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+    end
+    
 endtask
 
 
 task preload_dccm;
-bit[31:0] data;
-bit[31:0] addr, saddr, eaddr;
+    bit[31:0] data;
+    bit[31:0] addr, saddr, eaddr;
+    
+    /*
+    addresses:
+     0xffff_fff8 - DCCM start address to load
+     0xffff_fffc - DCCM end address to load
+    */
+    
+    addr = 'hffff_fff8;
+    saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
+    if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) begin
+        $display("Task preload_dccm -> Loading from external memory instead");
+                return;
+    end
+    `ifndef RV_DCCM_ENABLE
+        $display("********************************************************");
+        $display("DCCM preload: there is no DCCM in VeeR, terminating !!!");
+        $display("********************************************************");
+        $finish;
+    `endif
+    addr += 4;
+    eaddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
 
-/*
-addresses:
- 0xffff_fff8 - DCCM start address to load
- 0xffff_fffc - DCCM end address to load
-*/
-
-addr = 'hffff_fff8;
-saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
-if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
-`ifndef RV_DCCM_ENABLE
-    $display("********************************************************");
-    $display("DCCM preload: there is no DCCM in VeeR, terminating !!!");
-    $display("********************************************************");
-    $finish;
-`endif
-addr += 4;
-eaddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
-$display("DCCM pre-load from %h to %h", saddr, eaddr);
-
-for(addr=saddr; addr <= eaddr; addr+=4) begin
-    data = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
-    slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
-end
-
+    $display("DCCM pre-load from %h to %h", saddr, eaddr);
+    
+    for(addr=saddr; addr <= eaddr; addr+=4) begin
+        data = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
+        slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+    end
+    
 endtask
 
 `define DRAM(bank) \
@@ -897,15 +904,15 @@ task slam_dccm_ram(input [31:0] addr, input[38:0] data);
 endtask
 
 function[6:0] riscv_ecc32(input[31:0] data);
-reg[6:0] synd;
-synd[0] = ^(data & 32'h56aa_ad5b);
-synd[1] = ^(data & 32'h9b33_366d);
-synd[2] = ^(data & 32'he3c3_c78e);
-synd[3] = ^(data & 32'h03fc_07f0);
-synd[4] = ^(data & 32'h03ff_f800);
-synd[5] = ^(data & 32'hfc00_0000);
-synd[6] = ^{data, synd[5:0]};
-return synd;
+    reg[6:0] synd;
+    synd[0] = ^(data & 32'h56aa_ad5b);
+    synd[1] = ^(data & 32'h9b33_366d);
+    synd[2] = ^(data & 32'he3c3_c78e);
+    synd[3] = ^(data & 32'h03fc_07f0);
+    synd[4] = ^(data & 32'h03ff_f800);
+    synd[5] = ^(data & 32'hfc00_0000);
+    synd[6] = ^{data, synd[5:0]};
+    return synd;
 endfunction
 
 function int get_dccm_bank(input int addr,  output int bank_idx);
