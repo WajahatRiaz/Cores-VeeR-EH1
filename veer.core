@@ -64,7 +64,7 @@ filesets:
   tb:
     files:
       - testbench/dasm.svi : {is_include_file : true}
-      - testbench/ahb_sif.sv
+      - testbench/axb_sif.sv
       - testbench/tb_top.sv
     file_type : systemVerilogSource
 

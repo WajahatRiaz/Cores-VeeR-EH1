@@ -62,7 +62,7 @@ OFILES = $(TEST).o
 -include $(TEST_DIR)/$(TEST).mki
 
 VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR)
-TBFILES = $(TBDIR)/tb_top.sv $(TBDIR)/ahb_sif.sv
+TBFILES = $(TBDIR)/tb_top.sv $(TBDIR)/axi_sif.sv
 
 defines = $(BUILD_DIR)/common_defines.vh ${RV_ROOT}/design/include/veer_types.sv
 includes = -I${RV_ROOT}/design/include -I${RV_ROOT}/design/lib  -I${BUILD_DIR}
