@@ -807,8 +807,9 @@ task preload_iccm;
     
     addr = 'hffff_fff0;
     saddr = {imem.mem[addr+3],imem.mem[addr+2],imem.mem[addr+1],imem.mem[addr]};
+    $display("imem[ffff_fff0]-> Base address of ICCM in map is 0x%8h",saddr );
     if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) begin
-        $display("Task preload_iccm -> Loading from external memory instead");
+        $display("            -> Loading from external memory instead");
         return;
     end
     `ifndef RV_ICCM_ENABLE
@@ -841,8 +842,9 @@ task preload_dccm;
     
     addr = 'hffff_fff8;
     saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
+    $display("lmem[ffff_fff8]-> Base address of DCCM in map is 0x%8h",saddr );
     if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) begin
-        $display("Task preload_dccm -> Loading from external memory instead");
+        $display("            -> Loading from external memory instead");
                 return;
     end
     `ifndef RV_DCCM_ENABLE
