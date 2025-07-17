@@ -228,65 +228,6 @@ module veer_wrapper
 
 `endif
 
-`ifdef RV_BUILD_AHB_LITE
- //// AHB LITE BUS
-   output logic [31:0]               haddr,
-   output logic [2:0]                hburst,
-   output logic                      hmastlock,
-   output logic [3:0]                hprot,
-   output logic [2:0]                hsize,
-   output logic [1:0]                htrans,
-   output logic                      hwrite,
-
-   input logic [63:0]                hrdata,
-   input logic                       hready,
-   input logic                       hresp,
-
-   // LSU AHB Master
-   output logic [31:0]               lsu_haddr,
-   output logic [2:0]                lsu_hburst,
-   output logic                      lsu_hmastlock,
-   output logic [3:0]                lsu_hprot,
-   output logic [2:0]                lsu_hsize,
-   output logic [1:0]                lsu_htrans,
-   output logic                      lsu_hwrite,
-   output logic [63:0]               lsu_hwdata,
-
-   input logic [63:0]                lsu_hrdata,
-   input logic                       lsu_hready,
-   input logic                       lsu_hresp,
-   // Debug Syster Bus AHB
-   output logic [31:0]               sb_haddr,
-   output logic [2:0]                sb_hburst,
-   output logic                      sb_hmastlock,
-   output logic [3:0]                sb_hprot,
-   output logic [2:0]                sb_hsize,
-   output logic [1:0]                sb_htrans,
-   output logic                      sb_hwrite,
-   output logic [63:0]               sb_hwdata,
-
-   input  logic [63:0]               sb_hrdata,
-   input  logic                      sb_hready,
-   input  logic                      sb_hresp,
-
-   // DMA Slave
-   input logic [31:0]                dma_haddr,
-   input logic [2:0]                 dma_hburst,
-   input logic                       dma_hmastlock,
-   input logic [3:0]                 dma_hprot,
-   input logic [2:0]                 dma_hsize,
-   input logic [1:0]                 dma_htrans,
-   input logic                       dma_hwrite,
-   input logic [63:0]                dma_hwdata,
-   input logic                       dma_hsel,
-   input logic                       dma_hreadyin,
-
-   output logic [63:0]               dma_hrdata,
-   output logic                      dma_hreadyout,
-   output logic                      dma_hresp,
-
-`endif
-
 
    // clk ratio signals
    input logic                       lsu_bus_clk_en, // Clock ratio b/w cpu core clk & AHB master interface
@@ -310,6 +251,7 @@ module veer_wrapper
    input logic                       jtag_tdi, // JTAG tdi
    input logic                       jtag_trst_n, // JTAG Reset
    output logic                      jtag_tdo, // JTAG TDO
+   
    // external MPC halt/run interface
    input logic mpc_debug_halt_req, // Async halt request
    input logic mpc_debug_run_req, // Async run request
@@ -330,7 +272,7 @@ module veer_wrapper
 
 `include "global.h"
 
-   // DCCM ports
+   //-------------------------- DCCM ports--------------------------
    logic         dccm_wren;
    logic         dccm_rden;
    logic [DCCM_BITS-1:0]  dccm_wr_addr;
@@ -345,7 +287,7 @@ module veer_wrapper
 
    // PIC ports
 
-   // Icache & Itag ports
+   //-------------------------- Icache & Itag ports--------------------------
    logic [31:2]  ic_rw_addr;
    logic [3:0]   ic_wr_en  ;     // Which way to write
    logic         ic_rd_en ;
@@ -378,7 +320,7 @@ module veer_wrapper
    logic         ic_sel_premux_data;
 
 `ifdef RV_ICCM_ENABLE
-   // ICCM ports
+    //-------------------------- ICCM ports--------------------------
    logic [`RV_ICCM_BITS-1:2]    iccm_rw_addr;
    logic           iccm_wren;
    logic           iccm_rden;
