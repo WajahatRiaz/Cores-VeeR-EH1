@@ -806,7 +806,7 @@ task preload_iccm;
     */
     
     addr = 'hffff_fff0;
-    saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
+    saddr = {imem.mem[addr+3],imem.mem[addr+2],imem.mem[addr+1],imem.mem[addr]};
     if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) begin
         $display("Task preload_iccm -> Loading from external memory instead");
         return;
